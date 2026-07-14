@@ -1,0 +1,41 @@
+ConceptID,ConceptLabel,Dependencies,TaxonomyID,SourceURL
+1,AgentForce Platform,,PLATFORM,https://www.salesforce.com/products/einstein/agentforce/
+2,Einstein Agent,1:REQUIRES:0.95|30:REQUIRES:0.95|6:REQUIRES:0.95,AGENT,https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html
+3,Agent Topic,2:REQUIRES:0.95|4:REQUIRES:0.90,CONCEPT,https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html
+4,Agent Action,3:REQUIRES:0.90,CAPABILITY,https://developer.salesforce.com/docs/einstein/genai/guide/agent-actions.html
+5,Agent Instruction,3:REQUIRES:0.90,CONFIG,https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html
+6,Einstein Trust Layer,1:REQUIRES:0.95,SECURITY,https://www.salesforce.com/products/einstein/ai-trust-layer/
+7,Data Masking,6:REQUIRES:0.95,SECURITY,https://www.salesforce.com/products/einstein/ai-trust-layer/
+8,Audit Trail,6:REQUIRES:0.95,COMPLIANCE,https://www.salesforce.com/products/einstein/ai-trust-layer/
+9,Zero Data Retention,6:REQUIRES:0.95,COMPLIANCE,https://www.salesforce.com/products/einstein/ai-trust-layer/
+10,Grounding,2:REQUIRES:0.95|6:REQUIRES:0.90,MECHANISM,https://developer.salesforce.com/docs/einstein/genai/guide/prompt-builder.html
+11,Data Cloud,1:ENABLES:0.90,PLATFORM,https://www.salesforce.com/products/data/
+12,Knowledge Base,1:REQUIRES:0.85,ARTIFACT,https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html
+13,Retrieval Augmented Generation,12:REQUIRES:0.95|10:IMPLEMENTS:0.90,MECHANISM,https://developer.salesforce.com/docs/einstein/genai/guide/prompt-builder.html
+14,Prompt Template,2:REQUIRES:0.90,ARTIFACT,https://developer.salesforce.com/docs/einstein/genai/guide/prompt-builder.html
+15,Resolution Criteria,2:REQUIRES:0.95,CONCEPT,https://www.salesforce.com/products/einstein/agentforce/
+16,Autonomous Resolution,15:REQUIRES:0.95|8:REQUIRES:0.90,BILLING,https://www.salesforce.com/products/einstein/agentforce/
+17,Handoff to Human,16:RELATES_TO:0.85,WORKFLOW,https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html
+18,Conversation State,2:REQUIRES:0.90,CONCEPT,https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html
+19,Service Agent,2:IMPLEMENTS:0.95,AGENT,https://www.salesforce.com/products/service/ai/
+20,Sales Agent,2:IMPLEMENTS:0.95,AGENT,https://www.salesforce.com/products/sales/ai/
+21,Marketing Agent,2:IMPLEMENTS:0.90,AGENT,https://www.salesforce.com/products/marketing/ai/
+22,Flow Action,4:IMPLEMENTS:0.95,CAPABILITY,https://developer.salesforce.com/docs/einstein/genai/guide/agent-actions.html
+23,Apex Action,4:IMPLEMENTS:0.90,CAPABILITY,https://developer.salesforce.com/docs/einstein/genai/guide/agent-actions.html
+24,External System Action,4:IMPLEMENTS:0.85,CAPABILITY,https://developer.salesforce.com/docs/einstein/genai/guide/agent-actions.html
+25,MuleSoft Action,4:IMPLEMENTS:0.85,CAPABILITY,https://developer.salesforce.com/docs/einstein/genai/guide/agent-actions.html
+26,Salesforce CRM,11:ENABLES:0.90,DATASOURCE,https://www.salesforce.com/products/
+27,Omni-Channel Routing,19:REQUIRES:0.85,WORKFLOW,https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html
+28,Multi-Agent Orchestration,2:REQUIRES:0.90,WORKFLOW,https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html
+29,Agent Builder,1:REQUIRES:0.90,TOOL,https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html
+30,Reasoning Engine,38:REQUIRES:0.95,ENGINE,https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html
+31,NVIDIA NIM,30:ENABLES:0.85,RUNTIME,https://docs.nvidia.com/nim/large-language-models/latest/about-nim-llm/overview.html
+32,Token Budget,30:REQUIRES:0.90|33:REQUIRES:0.90,CONFIG,https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html
+33,Context Window,30:REQUIRES:0.95,CONSTRAINT,https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html
+34,Semantic Retrieval,12:REQUIRES:0.90|13:IMPLEMENTS:0.85,ALGORITHM,https://developer.salesforce.com/docs/einstein/genai/guide/prompt-builder.html
+35,Policy Enforcement,6:REQUIRES:0.95,COMPLIANCE,https://www.salesforce.com/products/einstein/ai-trust-layer/
+36,Compliance Rules,35:REQUIRES:0.90,COMPLIANCE,https://www.salesforce.com/products/einstein/ai-trust-layer/
+37,Agent Metrics,16:REQUIRES:0.85|17:RELATES_TO:0.80,MONITORING,https://www.salesforce.com/products/einstein/agentforce/
+38,Model Selection,1:REQUIRES:0.85,CONFIG,https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html
+39,Standard Actions,4:IMPLEMENTS:0.95,CAPABILITY,https://developer.salesforce.com/docs/einstein/genai/guide/agent-actions.html
+40,Custom Actions,4:IMPLEMENTS:0.90|23:REQUIRES:0.85,CAPABILITY,https://developer.salesforce.com/docs/einstein/genai/guide/agent-actions.html

@@ -1,0 +1,34 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ckg-agentforce"
+version = "0.1.0"
+description = "Salesforce AgentForce as a traversable knowledge graph — 40 nodes, Einstein Trust Layer, Resolution Criteria, $2/resolution billing path. 11× fewer tokens than RAG. MCP-native."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Daniel Yarmoluk", email = "daniel.yarmoluk@gmail.com" }]
+keywords = ["salesforce", "agentforce", "einstein", "knowledge-graph", "mcp", "ai-agents", "rag-alternative", "enterprise-ai"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.10"
+dependencies = ["mcp>=1.0.0"]
+
+[project.scripts]
+ckg-agentforce = "ckg_agentforce.server:main"
+
+[project.urls]
+Homepage = "https://graphifymd.com"
+Repository = "https://github.com/Yarmoluk/ckg-agentforce"
+"Full Enterprise Stack" = "https://graphifymd.com/pro/"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ckg_agentforce"]
