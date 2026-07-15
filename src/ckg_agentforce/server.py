@@ -236,6 +236,70 @@ def resolution_path() -> str:
     return "\n".join(lines)
 
 
+@mcp.resource("agentforce://nodes")
+def get_nodes_resource() -> str:
+    """All 40 AgentForce concepts — full node list with taxonomy."""
+    id_to_label, _, _, _, taxonomy = load_graph(DOMAIN)
+    lines = ["# AgentForce CKG — All Concepts\n"]
+    by_tax: dict = {}
+    for cid, label in sorted(id_to_label.items(), key=lambda x: int(x[0])):
+        tax = taxonomy.get(cid, "UNCATEGORIZED")
+        by_tax.setdefault(tax, []).append(label)
+    for tax in sorted(by_tax):
+        lines.append(f"## {tax}")
+        for label in by_tax[tax]:
+            lines.append(f"  - {label}")
+    return "\n".join(lines)
+
+
+@mcp.resource("agentforce://resolution-chain")
+def get_resolution_chain_resource() -> str:
+    """The $2/autonomous-resolution billing chain — declared traversal path."""
+    id_to_label, label_to_id, prerequisites, _, taxonomy = load_graph(DOMAIN)
+    path = [
+        "einstein agent", "resolution criteria", "autonomous resolution",
+        "audit trail", "policy enforcement", "einstein trust layer",
+    ]
+    lines = ["# AgentForce — $2/Resolution Billing Chain\n"]
+    for name in path:
+        cid = find_concept(label_to_id, name)
+        if not cid:
+            continue
+        label = id_to_label[cid]
+        tax = taxonomy.get(cid, "")
+        prereqs = prerequisites.get(cid, [])
+        prereq_names = [id_to_label.get(p[0], p[0]) for p in prereqs]
+        lines.append(f"## {label}  [{tax}]")
+        if prereq_names:
+            lines.append(f"  requires: {' · '.join(prereq_names)}")
+        lines.append("")
+    lines.append("---")
+    lines.append("RAG: 2,982 tokens — model infers, possibly wrong")
+    lines.append("CKG: 269 tokens, 4 hops — declared, auditable, source-traced")
+    return "\n".join(lines)
+
+
+@mcp.resource("agentforce://concept/{concept}")
+def get_concept_resource(concept: str) -> str:
+    """Subgraph for any AgentForce concept — prerequisites and dependents."""
+    id_to_label, label_to_id, prerequisites, dependents, taxonomy = load_graph(DOMAIN)
+    cid = find_concept(label_to_id, concept)
+    if not cid:
+        return f"Concept '{concept}' not found. Try agentforce://nodes for the full list."
+    label = id_to_label[cid]
+    tax = taxonomy.get(cid, "")
+    prereqs = [id_to_label.get(p[0], p[0]) for p in prerequisites.get(cid, [])]
+    deps = [id_to_label.get(d[0], d[0]) for d in dependents.get(cid, [])]
+    lines = [f"# {label}  [{tax}]\n"]
+    lines.append(f"## Prerequisites ({len(prereqs)})")
+    for p in prereqs:
+        lines.append(f"  - {p}")
+    lines.append(f"\n## Dependents ({len(deps)})")
+    for d in deps:
+        lines.append(f"  - {d}")
+    return "\n".join(lines)
+
+
 @mcp.prompt()
 def show_burn() -> str:
     """Show the AgentForce token burn before/after — RAG vs CKG traversal"""
