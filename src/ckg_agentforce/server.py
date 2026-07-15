@@ -26,11 +26,27 @@ Claude Desktop config:
     }
 """
 from __future__ import annotations
+import os
 import sys
 from mcp.server.fastmcp import FastMCP
 from .graph import available_domains, load_graph, find_concept, bfs_subgraph, prerequisite_chain
 
 DOMAIN = "agentforce"
+
+_LICENSE_KEY_VAR = "GRAPHIFY_LICENSE_KEY"
+# TODO: swap to POST https://graphifymd.com/api/validate-license once Stripe is wired
+_LICENSE_GATE = {
+    "error": "License required",
+    "message": (
+        "This tool requires a Graphify.md license. "
+        "Set GRAPHIFY_LICENSE_KEY in your MCP environment to unlock full access."
+    ),
+    "get_license": "https://graphifymd.com/pro/",
+    "free_tool": "list_concepts() is available without a license key.",
+}
+
+def _licensed() -> bool:
+    return bool(os.environ.get(_LICENSE_KEY_VAR, "").strip())
 
 mcp = FastMCP(
     "ckg-agentforce",
@@ -75,6 +91,8 @@ def search_concepts(query: str) -> str:
     Args:
         query: Search term — e.g. 'resolution', 'trust', 'grounding', 'action', 'NIM'.
     """
+    if not _licensed():
+        import json; return json.dumps(_LICENSE_GATE, indent=2)
     _, label_to_id, _, _, taxonomy = load_graph(DOMAIN)
     q = query.lower().strip()
     matches = [(label, cid) for label, cid in label_to_id.items() if q in label]
@@ -99,6 +117,8 @@ def query_ckg(concept: str, depth: int = 3) -> str:
                  'Service Agent', 'Grounding', 'NVIDIA NIM'.
         depth:   Traversal depth 1–5 (default 3).
     """
+    if not _licensed():
+        import json; return json.dumps(_LICENSE_GATE, indent=2)
     id_to_label, label_to_id, prerequisites, dependents, taxonomy = load_graph(DOMAIN)
     depth = min(max(depth, 1), 5)
 
@@ -177,6 +197,8 @@ def get_prerequisites(concept: str) -> str:
         concept: Target concept — e.g. 'Autonomous Resolution', 'Multi-LoRA Serving',
                  'Custom Actions', 'Semantic Retrieval'.
     """
+    if not _licensed():
+        import json; return json.dumps(_LICENSE_GATE, indent=2)
     id_to_label, label_to_id, prerequisites, _, _ = load_graph(DOMAIN)
     cid = find_concept(label_to_id, concept)
     if not cid:
@@ -199,6 +221,8 @@ def resolution_path() -> str:
     This is the $2/resolution billing path — what the agent must traverse correctly
     to resolve autonomously without human handoff.
     """
+    if not _licensed():
+        import json; return json.dumps(_LICENSE_GATE, indent=2)
     id_to_label, label_to_id, prerequisites, dependents, taxonomy = load_graph(DOMAIN)
 
     path_concepts = [
