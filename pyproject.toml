@@ -22,8 +22,12 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = ["mcp>=1.0.0"]
 
+[project.optional-dependencies]
+serve = ["starlette>=0.41.0", "uvicorn>=0.30.0", "fastmcp>=0.4.0"]
+
 [project.scripts]
 ckg-agentforce = "ckg_agentforce.server:main"
+ckg-agentforce-serve = "ckg_agentforce.serve:main"
 
 [project.urls]
 Homepage = "https://graphifymd.com"

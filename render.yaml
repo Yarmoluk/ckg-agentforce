@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: ckg-agentforce
+    runtime: python
+    buildCommand: pip install -e ".[serve]"
+    startCommand: python -m ckg_agentforce.serve
+    plan: free
+    envVars:
+      - key: PORT
+        generateValue: true
