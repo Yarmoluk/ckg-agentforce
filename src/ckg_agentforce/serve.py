@@ -66,9 +66,10 @@ uvx ckg-agentforce</pre>
 
 
 def main():
+    import os
     import sys
 
-    port = 8000
+    port = int(os.environ.get("PORT", 8000))
     for i, arg in enumerate(sys.argv):
         if arg == "--port" and i + 1 < len(sys.argv):
             port = int(sys.argv[i + 1])
