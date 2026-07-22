@@ -7,6 +7,7 @@ ckg-agentforce — AgentForce as a traversable knowledge graph
 [![Python](https://img.shields.io/badge/python-3.10+-blue)](https://pypi.org/project/ckg-agentforce/)
 [![Data: ELv2](https://img.shields.io/badge/Data-ELv2-green)](LICENSE)
 [![Code: MIT](https://img.shields.io/badge/Code-MIT-blue)](LICENSE-CODE)
+[![ckg-agentforce MCP server](https://glama.ai/mcp/servers/Yarmoluk/ckg-agentforce/badges/score.svg)](https://glama.ai/mcp/servers/Yarmoluk/ckg-agentforce)
 [![F1: 0.471 · 4× RAG](https://img.shields.io/badge/F1-0.471_%C2%B7_4%C3%97_RAG-brightgreen)](https://github.com/Yarmoluk/ckg-benchmark/blob/main/paper/main.pdf)
 
 An auditable knowledge graph for Salesforce AgentForce — deterministic agent answers with full source traceability.
