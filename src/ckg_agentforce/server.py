@@ -260,51 +260,6 @@ def resolution_path() -> str:
     return "\n".join(lines)
 
 
-@mcp.tool()
-def verify_source(concept: str) -> str:
-    """Return the source URL and SHA-256 content hash for any AgentForce concept.
-
-    Closes the audit chain: edge answer → graph commit hash → source_content_hash → source_url.
-    Caller can independently verify with: curl -s <source_url> | sha256sum
-
-    Args:
-        concept: Concept name — e.g. 'Einstein Trust Layer', 'Autonomous Resolution'.
-    """
-    if not _licensed():
-        import json; return json.dumps(_LICENSE_GATE, indent=2)
-    id_to_label, label_to_id, _, _, _, provenance = load_graph(DOMAIN)
-    cid = find_concept(label_to_id, concept)
-    if not cid:
-        return f"Concept '{concept}' not found. Try list_concepts() or search_concepts()."
-
-    label = id_to_label[cid]
-    prov = provenance.get(cid, {})
-    source_url = prov.get("source_url", "")
-    source_hash = prov.get("source_hash", "")
-
-    lines = [
-        f"## Source provenance — {label}",
-        "",
-        f"concept:      {label}",
-        f"source_url:   {source_url or '(not set)'}",
-        f"source_hash:  {source_hash or '(not set)'}",
-        "",
-        "### Audit chain",
-        "  edge answer",
-        "    → graph commit hash     (git log -- agentforce.csv)",
-        f"    → source_content_hash  ({source_hash})",
-        f"    → knowledge_source_ref ({source_url})",
-        "",
-        "### Verify",
-        f"  curl -s '{source_url}' | sha256sum",
-        "  # compare to source_hash — mismatch = stale edge or upstream edit",
-        "",
-        "_Hash mismatch means the source changed since extraction or the graph was patched without re-fetching._",
-        "_Run scripts/refresh_hashes.py to recompute all hashes._",
-    ]
-    return "\n".join(lines)
-
-
 @mcp.resource("agentforce://nodes")
 def get_nodes_resource() -> str:
     """All 40 AgentForce concepts — full node list with taxonomy."""
