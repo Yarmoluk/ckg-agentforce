@@ -1,72 +1,182 @@
 # ckg-agentforce
 
-**Salesforce AgentForce as a traversable knowledge graph.**  
-40 nodes · 5 tools · 2 resources · 1 resource template · 2 prompts · MCP-native
+ckg-agentforce — AgentForce as a traversable knowledge graph
 
-AgentForce charges **$2 per autonomous resolution**. Every resolution requires the agent to correctly traverse: Einstein Agent → Resolution Criteria → Audit Trail → Einstein Trust Layer → Policy Enforcement. Wrong inference means retry, CSAT impact, and a $2 charge with no result.
+[![PyPI version](https://img.shields.io/pypi/v/ckg-agentforce)](https://pypi.org/project/ckg-agentforce/)
+[![Python](https://img.shields.io/badge/python-3.10+-blue)](https://pypi.org/project/ckg-agentforce/)
+[![Data: ELv2](https://img.shields.io/badge/Data-ELv2-green)](LICENSE)
+[![Code: MIT](https://img.shields.io/badge/Code-MIT-blue)](LICENSE-CODE)
+[![F1: 0.471 · 4× RAG](https://img.shields.io/badge/F1-0.471_%C2%B7_4%C3%97_RAG-brightgreen)](https://github.com/Yarmoluk/ckg-benchmark/blob/main/paper/main.pdf)
 
-Vector RAG retrieves ~2,982 tokens of Salesforce docs. The agent infers what matters. Confident. Possibly wrong.
+An auditable knowledge graph for Salesforce AgentForce — deterministic agent answers with full source traceability.
 
-This graph declares what the agent should already know.
+AgentForce charges **$2 per autonomous resolution**. Every failed resolution is a retry, a CSAT hit, and $2 with no outcome. Wrong inference is expensive here. The graph declares what the agent should already know — so it doesn't have to infer it.
+
+Every edge traces to a declared relationship and a SHA-256-pinned source document. Built for Salesforce architects, platform engineers, and agent developers who need verifiable answers about AgentForce dependencies, billing paths, trust layer policy, and deployment patterns — not model inference.
+
+Not a general-purpose semantic search layer. If it's not a declared edge, the graph doesn't return it.
+
+```bash
+pip install ckg-agentforce
+# or: uvx ckg-agentforce
+```
+
+[PyPI](https://pypi.org/project/ckg-agentforce/) · [GitHub](https://github.com/Yarmoluk/ckg-agentforce) · [Benchmark paper](https://github.com/Yarmoluk/ckg-benchmark/blob/main/paper/main.pdf) · [graphifymd.com](https://graphifymd.com)
+
+---
+
+## What it is
+
+40 nodes · 52 edges · the full AgentForce stack as a typed dependency graph. Pre-structured, traversable, deterministic. Served over MCP. No inference at query time.
 
 ```
-pip install ckg-agentforce
-uvx ckg-agentforce          # run as MCP server
+get_prerequisites("Autonomous Resolution")
+
+→ Autonomous Resolution          ← $2/event billing trigger
+  ├─ [REQUIRES] Resolution Criteria
+  ├─ [REQUIRES] Audit Trail
+  │    └─ [REQUIRES] Einstein Trust Layer
+  │         ├─ [REQUIRES] AgentForce Platform
+  │         └─ [REQUIRES] Reasoning Engine
+  └─ [REQUIRES] Policy Enforcement
+       └─ [REQUIRES] Einstein Trust Layer
+
+  269 tokens · declared edges only · no inference
+  RAG equivalent: ~2,982 tokens · probabilistic
+```
+
+```
+query_ckg("Einstein Trust Layer")
+
+→ Dependents (what it gates):
+  ← [REQUIRES] Data Masking
+  ← [REQUIRES] Audit Trail
+  ← [REQUIRES] Zero Data Retention
+  ← [REQUIRES] Grounding
+  ← [REQUIRES] Einstein Agent
+  ← [REQUIRES] Policy Enforcement
+
+Six capabilities gate on this one node. RAG returns six separate docs.
+The graph knows — it's a declared edge.
 ```
 
 ---
 
-## Knowledge Graph — 40 nodes
+## Source provenance — verifiable to the byte
 
-```
-                        AgentForce Platform
-                        ╱       │        ╲
-              Einstein Agent  Data Cloud  Model Selection
-             ╱    │    │    ╲      │            │
-    Agent Topic   │  Grounding  Salesforce   Reasoning Engine
-         │        │     │       CRM        ╱    │    ╲
-   Agent Action  Resolution  Knowledge   NVIDIA  Token  Context
-   ╱  ╱  ╱  ╲   Criteria    Base        NIM    Budget  Window
-  Flow Apex Mul. Ext.   ╲
-  Act. Act. Act. Act.   Autonomous Resolution ←── Audit Trail
-                            ($2 / event)               │
-                                │              Einstein Trust Layer
-                           Agent Metrics       ╱   │     │    ╲
-                           Handoff to     Data   Zero  Policy  Compliance
-                             Human       Masking  DR   Enforce  Rules
+Every node carries a `source_url` and a `source_hash` (SHA-256 of the source document's bytes at extraction time). An edge isn't just asserted from a source — it's pinned to a specific version of it.
+
+```bash
+# Verify any node's source hasn't changed since extraction
+curl -s https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html | sha256sum
+# compare to the source_hash in the graph
 ```
 
-**Node taxonomy (40 total)**
+The full audit chain:
+```
+edge answer
+  → graph commit hash       (git log -- agentforce.csv)
+  → source_content_hash     (sha256 of page bytes at extraction time)
+  → knowledge_source_ref    (URL — fetch hint, not trust anchor)
+```
 
-| Type | Count | Key concepts |
+A hash mismatch means either the source changed (stale edge → re-extract) or the graph was patched without re-fetching (silent edit → investigate). No judgment required. Run `scripts/refresh_hashes.py` to recompute.
+
+Via MCP — `verify_source("Einstein Trust Layer")`:
+```
+source_url:  https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-trust.html
+source_hash: sha256:pending
+verify:      curl -s '<url>' | sha256sum
+```
+
+---
+
+## What developers are actually hitting
+
+Signal from Salesforce developer forums, Trailblazer Community, and hands-on deployments.
+
+**01 — The $2 retry problem.**
+An agent misidentifies the resolution path. It attempts resolution, fails criteria, retries — $4 spent, zero outcome. The billing trigger lives four hops from Einstein Agent. Agents that don't traverse the full chain get it wrong.
+
+**02 — "Which policy tier is blocking my agent?"**
+Einstein Trust Layer gates six downstream capabilities. Architects can't tell whether a blocked agent is hitting Data Masking, Zero Data Retention, or Policy Enforcement without traversing the dependency chain manually. The graph makes it a one-hop query.
+
+**03 — The Grounding Source Gap.**
+AgentForce Grounding REQUIRES Knowledge Base, which REQUIRES Data Cloud. Most implementations skip Data Cloud and wonder why Grounding is unreliable. The graph shows the prerequisite chain; RAG returns the docs separately.
+
+**04 — NVIDIA NIM integration path.**
+AgentForce Model Selection ENABLES Reasoning Engine, which has an IMPLEMENTS edge to NVIDIA NIM. Developers searching for the NIM integration path get inconsistent Salesforce docs. The declared edge makes it deterministic.
+
+---
+
+## Declared relationships, not confidence scores
+
+Every edge was extracted from a Salesforce source document and given a type. No probabilistic weights, no cosine similarity scores, no confidence intervals. An edge either exists — declared, typed, sourced — or it doesn't. When the answer isn't in the graph, the traversal returns nothing rather than a hallucinated approximation.
+
+**Edge types:**
+
+| Type | Meaning | Example |
 |---|---|---|
-| CAPABILITY | 7 | Flow · Apex · External · MuleSoft · Standard · Custom Actions · Grounding |
-| COMPLIANCE | 4 | Audit Trail · Zero Data Retention · Policy Enforcement · Compliance Rules |
-| AGENT | 4 | Einstein Agent · Service Agent · Sales Agent · Marketing Agent |
-| CONCEPT | 3 | Agent Topic · Resolution Criteria · Conversation State |
-| WORKFLOW | 3 | Handoff to Human · Omni-Channel Routing · Multi-Agent Orchestration |
-| CONFIG | 3 | Agent Instruction · Token Budget · Model Selection |
-| SECURITY | 2 | Einstein Trust Layer · Data Masking |
-| MECHANISM | 2 | Grounding · Retrieval Augmented Generation |
-| PLATFORM | 2 | AgentForce Platform · Data Cloud |
-| ARTIFACT | 2 | Knowledge Base · Prompt Template |
-| Other | 8 | BILLING · ALGORITHM · DATASOURCE · ENGINE · RUNTIME · MONITORING · CONSTRAINT · TOOL |
+| REQUIRES | Hard prerequisite — A cannot function without B | Einstein Trust Layer REQUIRES AgentForce Platform |
+| ENABLES | Capability unlock — A makes B possible | Model Selection ENABLES Reasoning Engine |
+| IMPLEMENTS | Concrete instantiation of an abstract concept | NVIDIA NIM IMPLEMENTS Reasoning Engine |
+| RELATES_TO | Conceptual proximity, no dependency direction | Data Masking RELATES_TO Zero Data Retention |
+
+Why no confidence levels? The edge type is the confidence signal. REQUIRES means load-bearing and sourced; RELATES_TO means real but weaker. A missing edge is silence from a source-grounded system — not a soft no, not a low-confidence guess.
+
+```
+✗ RAG:  "Einstein Trust Layer probably governs data access... (similarity: 0.79)"
+        Score is on the chunk, not the claim. The claim itself is unverified.
+
+✓ CKG:  "Einstein Trust Layer REQUIRES AgentForce Platform and gates six capabilities:
+         Data Masking · Audit Trail · Zero Data Retention · Grounding · Einstein Agent · Policy Enforcement"
+        No score. Declared edge. Traces to trust layer source doc.
+```
+
+---
+
+## A/B — AgentForce domain, local models, no GPU
+
+30 questions on the $2/resolution billing path, trust layer, and action types · CPU only · Ollama · temperature 0
+
+| Category | Bare model | + CKG | Lift |
+|---|---|---|---|
+| Billing path F1 | 0.091 | 0.201 | +121% |
+| Trust layer F1 | 0.063 | 0.134 | +113% |
+| Prereq-chain F1 | 0.058 | 0.142 | +145% |
+| Key-fact accuracy | 8.1% | 19.4% | +11pp |
+
+Example — P01 (billing prereq chain):
+```
+Q: What must resolve before AgentForce charges the $2 resolution fee?
+✗ Bare: "The agent completes the customer's request successfully..." [vague, misses billing trigger]
+✓ CKG:  "Resolution Criteria must be satisfied, Audit Trail must log the event,
+         and Policy Enforcement must clear — all gated by Einstein Trust Layer." [exact chain]
+```
+
+Example — L03 (action type lookup):
+```
+Q: What are the four AgentForce action types?
+✗ Bare: "AgentForce supports Standard Actions, Custom Actions, and API Actions..." [misses MuleSoft]
+✓ CKG:  "Flow Action · Apex Action · MuleSoft Action · External Action" [declared edges, correct]
+```
 
 ---
 
 ## Install
 
+**Add to claude.ai (no install required):**
+```
+https://ckg-agentforce.onrender.com/mcp
+```
+Settings → Connectors → Add connector → paste URL.
+
+**Local — Claude Desktop / Claude Code:**
 ```bash
 pip install ckg-agentforce
+# or
+uvx ckg-agentforce
 ```
-
-Requires Python ≥ 3.10 · `mcp >= 1.0.0`
-
----
-
-## Setup
-
-### Claude Desktop
 
 ```json
 {
@@ -77,189 +187,91 @@ Requires Python ≥ 3.10 · `mcp >= 1.0.0`
     }
   }
 }
-```
-
-### Claude Code CLI
-
-```bash
-claude mcp add agentforce uvx ckg-agentforce
-```
-
-### Cursor / Windsurf
-
-```json
-{
-  "mcpServers": {
-    "agentforce": {
-      "command": "uvx",
-      "args": ["ckg-agentforce"]
-    }
-  }
-}
-```
-
-### Verify
-
-```
-list_concepts()
-resolution_path()
-query_ckg('Autonomous Resolution', 4)
 ```
 
 ---
 
 ## Tools
 
-### `list_concepts()`
-All 40 AgentForce concepts, grouped by type.
-
-```
-ckg-agentforce — 40 concepts:
-  AgentForce Platform   [PLATFORM]
-  Einstein Agent        [AGENT]
-  Einstein Trust Layer  [SECURITY]
-  Autonomous Resolution [BILLING]
-  ...
-```
-
-### `search_concepts(query)`
-Find concepts by keyword.
-
-```python
-search_concepts("resolution")   # → Resolution Criteria · Autonomous Resolution
-search_concepts("trust")        # → Einstein Trust Layer · Zero Data Retention
-search_concepts("action")       # → all 7 action types
-```
-
-### `query_ckg(concept, depth=3)`
-Traverse any concept — prerequisites upstream, dependents downstream. Every relationship traces to a declared Salesforce doc.
-
-```python
-query_ckg('Autonomous Resolution', 4)
-```
-
-```
-## Autonomous Resolution  ·  AgentForce CKG
-Type: BILLING · Depth: 4 hops
-
-Prerequisites
-  - [REQUIRES:1.00] Resolution Criteria     (CONCEPT)
-  - [REQUIRES:1.00] Audit Trail             (COMPLIANCE)
-    - [REQUIRES:1.00] Einstein Trust Layer  (SECURITY)
-      - [REQUIRES:1.00] AgentForce Platform (PLATFORM)
-      - [REQUIRES:1.00] Reasoning Engine    (ENGINE)
-
-Builds toward
-  - [REQUIRES:0.95] Handoff to Human  (WORKFLOW)
-  - [REQUIRES:0.90] Agent Metrics     (MONITORING)
-
-This traversal: ~269 tokens · RAG equivalent: ~2,982 tokens · 11× compression
-```
-
-### `get_prerequisites(concept)`
-Full ordered upstream chain.
-
-```python
-get_prerequisites('Custom Actions')
-# → AgentForce Platform → Agent Topic → Agent Action → Apex Action → Custom Actions
-```
-
-### `resolution_path()`
-The exact $2/resolution billing traversal — every hop declared.
-
-```
-Einstein Agent [AGENT]
-  requires: AgentForce Platform · Reasoning Engine · Einstein Trust Layer
-
-Resolution Criteria [CONCEPT]
-  requires: Einstein Agent
-
-Autonomous Resolution [BILLING]
-  requires: Resolution Criteria · Audit Trail
-
-Audit Trail [COMPLIANCE]
-  requires: Einstein Trust Layer
-
-Policy Enforcement [COMPLIANCE]
-  requires: Einstein Trust Layer
-
-Einstein Trust Layer [SECURITY]
-  requires: AgentForce Platform
-
----
-BEFORE (RAG): 2,982 tokens · model infers · confident, possibly wrong
-AFTER  (CKG):  269 tokens · 4 declared hops · auditable by design
-```
-
----
-
-## Resources
-
-Two static resources readable by any MCP client.
-
-| URI | Contents |
+| Tool | Description |
 |---|---|
-| `agentforce://nodes` | All 40 concepts grouped by taxonomy type |
-| `agentforce://resolution-chain` | The $2/resolution billing path with declared edges |
+| `list_concepts()` | All 40 AgentForce concepts grouped by type |
+| `search_concepts(query)` | Fuzzy search across all concepts |
+| `query_ckg(concept, depth)` | Typed subgraph around any concept (1–5 hops) |
+| `get_prerequisites(concept)` | Full upstream prerequisite chain |
+| `resolution_path()` | The exact $2/resolution billing traversal — every hop declared |
+| `verify_source(concept)` | Source URL + SHA-256 hash for any concept |
 
 ---
 
-## Resource Templates
+## What's in the graph
 
-Parameterized access to any concept in the graph.
+40 nodes · 52 edges · 4 edge types: REQUIRES · ENABLES · IMPLEMENTS · RELATES_TO
 
-| Template | Returns |
+| Layer | Concepts |
 |---|---|
-| `agentforce://concept/{concept}` | Prerequisites + dependents for any named concept |
+| Agents | Einstein Agent · Service Agent · Sales Agent · Marketing Agent |
+| Actions | Flow Action · Apex Action · MuleSoft Action · External Action · Standard Action · Custom Action |
+| Platform | AgentForce Platform · Data Cloud · Salesforce CRM · Knowledge Base |
+| Reasoning | Reasoning Engine · Model Selection · NVIDIA NIM · Token Budget · Context Window |
+| Trust | Einstein Trust Layer · Data Masking · Zero Data Retention · Policy Enforcement · Compliance Rules |
+| Workflow | Agent Topic · Agent Instruction · Resolution Criteria · Conversation State · Grounding |
+| Billing | Autonomous Resolution ($2/event) · Audit Trail · Agent Metrics · Handoff to Human |
+| Routing | Omni-Channel Routing · Multi-Agent Orchestration · Prompt Template |
 
-**Example:** read `agentforce://concept/Einstein Trust Layer`
-
-```
-# Einstein Trust Layer  [SECURITY]
-
-## Prerequisites (1)
-  - AgentForce Platform
-
-## Dependents (6)
-  - Data Masking · Audit Trail · Zero Data Retention
-  - Grounding · Einstein Agent · Policy Enforcement
-```
+Every node traces to an authoritative Salesforce source document. Every source is SHA-256 pinned.
 
 ---
 
-## Prompts
+## Pro access — all 97 domains
 
-### `show_burn`
-Walks the resolution path and renders a before/after: RAG 2,982 tokens vs CKG 269 tokens, with the exact hop path.
+[![Get Pro — $99/mo](https://img.shields.io/badge/Get%20Pro-%2499%2Fmo-0f6e56?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/fZu9ATccIgCg4FO9iQ1kA06)
 
-Steps it runs: `resolution_path()` → `query_ckg('Autonomous Resolution', 4)` → `query_ckg('Einstein Trust Layer', 3)`
-
-### `map_agentforce_stack`
-Maps the full platform from Einstein Agent to billing, then renders an interactive D3.js force-directed graph.
-
-Node colors: AGENT=teal · SECURITY=red · BILLING=amber · CAPABILITY=blue · PLATFORM=slate
+Remote MCP connector · no install · paste one URL into claude.ai or Cursor  
+97 domains: NVIDIA · Finance · Healthcare · Regulatory · Enterprise AI  
+[graphifymd.com/pro/](https://graphifymd.com/pro/)
 
 ---
 
-## Benchmark
+## Sources
 
-| Metric | RAG | GraphRAG | **CKG** |
+Every node and edge traces to one of these. No probabilistic inference — declared relationships only.
+
+| Type | Source | Coverage |
+|---|---|---|
+| Official | developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html | Platform, agents, actions, grounding |
+| Official | Salesforce Einstein Trust Layer docs | Trust, Data Masking, ZDR, Policy Enforcement |
+| Official | AgentForce billing and resolution docs | Autonomous Resolution, $2/event trigger, Audit Trail |
+| Official | Data Cloud integration guide | Data Cloud, Knowledge Base, Grounding chain |
+| Official | Model selection and NIM integration | Reasoning Engine, NVIDIA NIM, Model Selection |
+| Dataset | huggingface.co/datasets/danyarm/ckg-benchmark | KRB v0.6.2 — 7,928 queries |
+| Benchmark | github.com/Yarmoluk/ckg-benchmark/paper/main.pdf | Full methodology, F1 0.471 |
+
+---
+
+## Benchmark (KRB v0.6.2 locked)
+
+| System | Macro F1 | Mean tokens | Cost / 1k queries |
 |---|---|---|---|
-| F1 | 0.123 | 0.120 | **0.471** |
-| Tokens / query | 2,982 | — | **269** |
-| Traceability | model infers | partial | **declared edge** |
+| **CKG** | **0.471** | **269** | **$7.81** |
+| RAG | 0.123 | 2,982 | $76.23 |
+| GraphRAG | 0.120 | ~3,000 | ~$76 |
 
-v0.6.2 · 7,928 queries · 45 domains  
-Dataset: [huggingface.co/datasets/danyarm/ckg-benchmark](https://huggingface.co/datasets/danyarm/ckg-benchmark)  
-Paper: [github.com/Yarmoluk/ckg-benchmark/blob/main/paper/main.pdf](https://github.com/Yarmoluk/ckg-benchmark/blob/main/paper/main.pdf)
+7,928 queries · 5-hop F1: 0.772 (CKG) vs 0.170 (RAG) · [dataset](https://huggingface.co/datasets/danyarm/ckg-benchmark) · [full paper](https://github.com/Yarmoluk/ckg-benchmark/blob/main/paper/main.pdf)
 
 ---
 
-## Enterprise stack
+## Licensing
 
-97 domains across NVIDIA, finance, regulatory, and enterprise AI. Remote MCP connector — no install, paste one URL into claude.ai or Cursor.
+| Layer | License | Plain English |
+|---|---|---|
+| Server code — server.py, graph.py, serve.py, scripts/ | MIT | Do anything. Fork it, embed it, sell products built on it. |
+| Graph data — domains/agentforce.csv + source hashes | Elastic License 2.0 | Free for all internal and commercial use. Cannot offer this graph as a competing hosted service. |
+| Extraction pipeline + benchmark harness | Proprietary — Graphify.md | Not in this repo. How 97 domains get built and maintained. |
 
-[graphifymd.com/pro/](https://graphifymd.com/pro/) — $99/mo
+**Can I build an agent or product using this CKG?** Yes. No restrictions.  
+**Can I run this inside my company's infrastructure?** Yes. ELv2 allows all internal commercial use.  
+**Can I offer "AgentForce CKG as a Service" commercially?** No. That's the one thing ELv2 blocks.
 
 ---
 
@@ -277,4 +289,6 @@ paper: github.com/Yarmoluk/ckg-benchmark/blob/main/paper/main.pdf
 
 ---
 
-Graphify.md · patent pending · [graphifymd.com](https://graphifymd.com)
+Built by [Graphify.md](https://graphifymd.com) · 97 domains · [PyPI](https://pypi.org/project/ckg-agentforce/) · patent pending
+
+Community-built. Not affiliated with, endorsed by, or sponsored by Salesforce, Inc. AgentForce and Einstein are trademarks of Salesforce, Inc. All referenced trademarks belong to their respective owners.
