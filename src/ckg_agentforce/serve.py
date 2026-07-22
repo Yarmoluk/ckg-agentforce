@@ -52,6 +52,10 @@ _landing_html = """<!DOCTYPE html>
 # or via uvx:
 uvx ckg-agentforce</pre>
 
+  <h2>Subscribe — $29/mo</h2>
+  <p>API key delivered instantly. Unlocks metered remote access and usage analytics.</p>
+  <a href="https://buy.stripe.com/00wbJ1gsYcm01tC52A1kA08" style="display:inline-block;background:#0f6e56;color:white;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:600;margin-bottom:24px;">Subscribe $29/mo →</a>
+
   <p>
     <a href="https://graphifymd.com/pro/">graphifymd.com/pro</a> ·
     <a href="https://github.com/Yarmoluk/ckg-agentforce">GitHub</a> ·
