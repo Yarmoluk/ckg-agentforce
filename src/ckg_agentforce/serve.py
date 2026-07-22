@@ -26,7 +26,7 @@ _landing_html = """<!DOCTYPE html>
 </head>
 <body>
   <h1>ckg-agentforce</h1>
-  <p class="sub">Compressed Knowledge Graph · Salesforce AgentForce · <span class="badge">v0.2.0</span></p>
+  <p class="sub">Compressed Knowledge Graph · Salesforce AgentForce · <span class="badge">v0.2.6</span></p>
 
   <div>
     <div class="stat"><strong>40</strong><span>nodes</span></div>
@@ -81,7 +81,7 @@ def main():
     async def server_card(request: Request):
         return JSONResponse({
             "name": "ckg-agentforce",
-            "version": "0.2.0",
+            "version": "0.2.6",
             "description": "40-node Compressed Knowledge Graph for Salesforce AgentForce",
             "tools": [
                 "list_concepts", "search_concepts", "query_ckg",
