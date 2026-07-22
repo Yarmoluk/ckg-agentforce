@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Yarmoluk/ckg-agentforce",
+  "description": "Salesforce AgentForce as a traversable knowledge graph — 40 nodes, Einstein Trust Layer, Resolution Criteria, $2/resolution billing path, MCP-native.",
+  "repository": {
+    "url": "https://github.com/Yarmoluk/ckg-agentforce",
+    "source": "github"
+  },
+  "version": "0.2.4",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "ckg-agentforce",
+      "version": "0.2.4",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtimeHint": "uvx"
+    }
+  ]
+}
