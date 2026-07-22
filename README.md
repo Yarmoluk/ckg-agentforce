@@ -195,14 +195,21 @@ uvx ckg-agentforce
 
 ## Tools
 
-| Tool | Description |
-|---|---|
-| `list_concepts()` | All 40 AgentForce concepts grouped by type |
-| `search_concepts(query)` | Fuzzy search across all concepts |
-| `query_ckg(concept, depth)` | Typed subgraph around any concept (1–5 hops) |
-| `get_prerequisites(concept)` | Full upstream prerequisite chain |
-| `resolution_path()` | The exact $2/resolution billing traversal — every hop declared |
-| `verify_source(concept)` | Source URL + SHA-256 hash for any concept |
+- **list_concepts** — List all 40 AgentForce concepts grouped by type
+- **search_concepts** — Fuzzy search across all concepts by keyword
+- **query_ckg** — Typed subgraph around any concept (1–5 hops)
+- **get_prerequisites** — Full upstream prerequisite chain for any concept
+- **resolution_path** — The exact $2/resolution billing traversal — every hop declared
+- **verify_source** — Source URL + SHA-256 hash for any concept (GuardrailDecisionV1)
+
+| Tool | Args | Description |
+|---|---|---|
+| `list_concepts()` | — | All 40 AgentForce concepts grouped by type |
+| `search_concepts(query)` | query: str | Fuzzy search across all concepts |
+| `query_ckg(concept, depth)` | concept: str, depth: int 1–5 | Typed subgraph around any concept |
+| `get_prerequisites(concept)` | concept: str | Full upstream prerequisite chain |
+| `resolution_path()` | — | The $2/resolution billing traversal — every hop declared |
+| `verify_source(concept)` | concept: str | Source URL + SHA-256 hash · full audit chain |
 
 ---
 
