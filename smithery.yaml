@@ -1,8 +1,14 @@
+logo: https://raw.githubusercontent.com/Yarmoluk/ckg-agentforce/main/assets/logo.png
+
 startCommand:
   type: stdio
   configSchema:
     type: object
     properties: {}
-    required: []
+    additionalProperties: false
   commandFunction: |-
-    (config) => ({ command: "uvx", args: ["ckg-agentforce"] })
+    (config) => ({
+      command: "uvx",
+      args: ["ckg-agentforce"],
+      env: {}
+    })
