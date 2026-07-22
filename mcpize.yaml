@@ -3,5 +3,5 @@ runtime: python
 build:
   install: pip install -r requirements.txt
 startCommand:
-  type: http
-  command: ckg-agentforce-serve
+  type: stdio
+  command: ckg-agentforce
