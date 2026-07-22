@@ -1,3 +1,4 @@
+<!-- mcp-name: io.github.Yarmoluk/ckg-agentforce -->
 # ckg-agentforce
 
 ckg-agentforce — AgentForce as a traversable knowledge graph
