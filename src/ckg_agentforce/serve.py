@@ -3,7 +3,15 @@ HTTP server for ckg-agentforce — Streamable HTTP transport (Render/Smithery-co
 """
 from __future__ import annotations
 
+import time
+from collections import defaultdict
+
 from .server import mcp
+
+_STRIPE_LINK = "https://buy.stripe.com/00wbJ1gsYcm01tC52A1kA08"
+_FREE_LIMIT = 50  # calls per IP per 24h before 402
+
+_call_counts: dict = defaultdict(lambda: {"count": 0, "reset": time.time() + 86400})
 
 _landing_html = """<!DOCTYPE html>
 <html lang="en">
@@ -47,13 +55,15 @@ _landing_html = """<!DOCTYPE html>
     <li><code>resolution_path()</code> — the $2/resolution billing chain</li>
   </ul>
 
+  <p>Free tier: 50 calls/day per IP. Subscribe for unlimited access.</p>
+
   <h2>Quick start</h2>
   <pre>pip install ckg-agentforce
 # or via uvx:
 uvx ckg-agentforce</pre>
 
   <h2>Subscribe — $29/mo</h2>
-  <p>API key delivered instantly. Unlocks metered remote access and usage analytics.</p>
+  <p>Unlimited remote calls. API key delivered instantly.</p>
   <a href="https://buy.stripe.com/00wbJ1gsYcm01tC52A1kA08" style="display:inline-block;background:#0f6e56;color:white;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:600;margin-bottom:24px;">Subscribe $29/mo →</a>
 
   <p>
@@ -63,6 +73,23 @@ uvx ckg-agentforce</pre>
   </p>
 </body>
 </html>"""
+
+
+def _get_ip(request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For", "")
+    return forwarded.split(",")[0].strip() if forwarded else (request.client.host or "unknown")
+
+
+def _check_rate_limit(ip: str) -> bool:
+    now = time.time()
+    state = _call_counts[ip]
+    if now > state["reset"]:
+        state["count"] = 0
+        state["reset"] = now + 86400
+    if state["count"] >= _FREE_LIMIT:
+        return False
+    state["count"] += 1
+    return True
 
 
 def main():
@@ -75,10 +102,25 @@ def main():
             port = int(sys.argv[i + 1])
 
     from starlette.applications import Starlette
+    from starlette.middleware.base import BaseHTTPMiddleware
     from starlette.requests import Request
     from starlette.responses import HTMLResponse, JSONResponse
     from starlette.routing import Mount, Route
     import uvicorn
+
+    class RateLimitMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request: Request, call_next):
+            if request.url.path.startswith("/mcp"):
+                ip = _get_ip(request)
+                if not _check_rate_limit(ip):
+                    return JSONResponse(
+                        {
+                            "error": "Free tier limit reached (50 calls/day). Subscribe for unlimited access.",
+                            "subscribe": _STRIPE_LINK,
+                        },
+                        status_code=402,
+                    )
+            return await call_next(request)
 
     async def homepage(request: Request):
         return HTMLResponse(_landing_html)
@@ -105,6 +147,7 @@ def main():
         Route("/.well-known/mcp/server-card.json", server_card),
         Mount("/mcp", app=mcp_app),
     ])
+    app.add_middleware(RateLimitMiddleware)
 
     uvicorn.run(app, host="0.0.0.0", port=port)
 

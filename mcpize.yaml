@@ -1,7 +1,7 @@
 version: 1
 runtime: python
 build:
-  install: pip install ".[serve]"
+  install: pip install -r requirements.txt
 startCommand:
   type: http
-  command: python -m ckg_agentforce.serve
+  command: ckg-agentforce-serve
