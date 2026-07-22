@@ -74,7 +74,7 @@ mcp = FastMCP(
 @mcp.tool()
 def list_concepts() -> str:
     """List all 40 AgentForce concepts in this knowledge graph."""
-    id_to_label, _, _, _, taxonomy = load_graph(DOMAIN)
+    id_to_label, _, _, _, taxonomy, _ = load_graph(DOMAIN)
     lines = [f"ckg-agentforce — {len(id_to_label)} concepts:\n"]
     for cid in sorted(id_to_label, key=lambda x: int(x)):
         label = id_to_label[cid]
@@ -93,7 +93,7 @@ def search_concepts(query: str) -> str:
     """
     if not _licensed():
         import json; return json.dumps(_LICENSE_GATE, indent=2)
-    _, label_to_id, _, _, taxonomy = load_graph(DOMAIN)
+    _, label_to_id, _, _, taxonomy, _ = load_graph(DOMAIN)
     q = query.lower().strip()
     matches = [(label, cid) for label, cid in label_to_id.items() if q in label]
     if not matches:
@@ -119,7 +119,7 @@ def query_ckg(concept: str, depth: int = 3) -> str:
     """
     if not _licensed():
         import json; return json.dumps(_LICENSE_GATE, indent=2)
-    id_to_label, label_to_id, prerequisites, dependents, taxonomy = load_graph(DOMAIN)
+    id_to_label, label_to_id, prerequisites, dependents, taxonomy, _ = load_graph(DOMAIN)
     depth = min(max(depth, 1), 5)
 
     cid = find_concept(label_to_id, concept)
@@ -199,7 +199,7 @@ def get_prerequisites(concept: str) -> str:
     """
     if not _licensed():
         import json; return json.dumps(_LICENSE_GATE, indent=2)
-    id_to_label, label_to_id, prerequisites, _, _ = load_graph(DOMAIN)
+    id_to_label, label_to_id, prerequisites, _, _, _ = load_graph(DOMAIN)
     cid = find_concept(label_to_id, concept)
     if not cid:
         return f"Concept '{concept}' not found. Try list_concepts() or search_concepts()."
@@ -223,7 +223,7 @@ def resolution_path() -> str:
     """
     if not _licensed():
         import json; return json.dumps(_LICENSE_GATE, indent=2)
-    id_to_label, label_to_id, prerequisites, dependents, taxonomy = load_graph(DOMAIN)
+    id_to_label, label_to_id, prerequisites, dependents, taxonomy, _ = load_graph(DOMAIN)
 
     path_concepts = [
         "einstein agent",
@@ -260,10 +260,55 @@ def resolution_path() -> str:
     return "\n".join(lines)
 
 
+@mcp.tool()
+def verify_source(concept: str) -> str:
+    """Return the source URL and SHA-256 content hash for any AgentForce concept.
+
+    Closes the audit chain: edge answer → graph commit hash → source_content_hash → source_url.
+    Caller can independently verify with: curl -s <source_url> | sha256sum
+
+    Args:
+        concept: Concept name — e.g. 'Einstein Trust Layer', 'Autonomous Resolution'.
+    """
+    if not _licensed():
+        import json; return json.dumps(_LICENSE_GATE, indent=2)
+    id_to_label, label_to_id, _, _, _, provenance = load_graph(DOMAIN)
+    cid = find_concept(label_to_id, concept)
+    if not cid:
+        return f"Concept '{concept}' not found. Try list_concepts() or search_concepts()."
+
+    label = id_to_label[cid]
+    prov = provenance.get(cid, {})
+    source_url = prov.get("source_url", "")
+    source_hash = prov.get("source_hash", "")
+
+    lines = [
+        f"## Source provenance — {label}",
+        "",
+        f"concept:      {label}",
+        f"source_url:   {source_url or '(not set)'}",
+        f"source_hash:  {source_hash or '(not set)'}",
+        "",
+        "### Audit chain",
+        "  edge answer",
+        "    → graph commit hash     (git log -- agentforce.csv)",
+        f"    → source_content_hash  ({source_hash})",
+        f"    → knowledge_source_ref ({source_url})",
+        "",
+        "### Verify",
+        f"  curl -s '{source_url}' | sha256sum",
+        "  # compare to source_hash — mismatch = stale edge or upstream edit",
+        "",
+        "_Hash mismatch means the source changed since extraction or the graph was patched without re-fetching._",
+        "_Run scripts/refresh_hashes.py to recompute all hashes._",
+    ]
+    return "\n".join(lines)
+
+
 @mcp.resource("agentforce://nodes")
 def get_nodes_resource() -> str:
     """All 40 AgentForce concepts — full node list with taxonomy."""
-    id_to_label, _, _, _, taxonomy = load_graph(DOMAIN)
+    id_to_label, _, _, _, taxonomy, _ = load_graph(DOMAIN)
     lines = ["# AgentForce CKG — All Concepts\n"]
     by_tax: dict = {}
     for cid, label in sorted(id_to_label.items(), key=lambda x: int(x[0])):
@@ -279,7 +324,7 @@ def get_nodes_resource() -> str:
 @mcp.resource("agentforce://resolution-chain")
 def get_resolution_chain_resource() -> str:
     """The $2/autonomous-resolution billing chain — declared traversal path."""
-    id_to_label, label_to_id, prerequisites, _, taxonomy = load_graph(DOMAIN)
+    id_to_label, label_to_id, prerequisites, _, taxonomy, _ = load_graph(DOMAIN)
     path = [
         "einstein agent", "resolution criteria", "autonomous resolution",
         "audit trail", "policy enforcement", "einstein trust layer",
@@ -306,7 +351,7 @@ def get_resolution_chain_resource() -> str:
 @mcp.resource("agentforce://concept/{concept}")
 def get_concept_resource(concept: str) -> str:
     """Subgraph for any AgentForce concept — prerequisites and dependents."""
-    id_to_label, label_to_id, prerequisites, dependents, taxonomy = load_graph(DOMAIN)
+    id_to_label, label_to_id, prerequisites, dependents, taxonomy, _ = load_graph(DOMAIN)
     cid = find_concept(label_to_id, concept)
     if not cid:
         return f"Concept '{concept}' not found. Try agentforce://nodes for the full list."
@@ -321,6 +366,62 @@ def get_concept_resource(concept: str) -> str:
     lines.append(f"\n## Dependents ({len(deps)})")
     for d in deps:
         lines.append(f"  - {d}")
+    return "\n".join(lines)
+
+
+@mcp.tool()
+def verify_source(concept: str) -> str:
+    """Return the source URL and content hash for an AgentForce concept node.
+
+    Audit chain:
+        edge answer → graph commit → source_hash → source_url (fetch hint)
+
+    Verification:
+        curl -s <source_url> | sha256sum
+        # compare output to source_hash
+
+    Args:
+        concept: Concept label (partial match supported).
+    """
+    id_to_label, label_to_id, _, _, taxonomy, provenance = load_graph(DOMAIN)
+    cid = find_concept(label_to_id, concept.lower())
+    if not cid:
+        return f"Concept '{concept}' not found. Use search_concepts() to find the closest match."
+
+    label = id_to_label[cid]
+    prov = provenance.get(cid, {})
+    source_url = prov.get("source_url") or "unknown"
+    source_hash = prov.get("source_hash") or "sha256:not-computed"
+
+    sentinel_notes = {
+        "sha256:restricted": "Source returned 4xx/5xx — page requires auth or is gone.",
+        "sha256:unavailable": "Network error at hash-compute time.",
+        "sha256:no-source-url": "No source URL declared for this node.",
+    }
+    note = sentinel_notes.get(source_hash, "")
+
+    lines = [
+        f"## Source provenance — {label}",
+        f"",
+        f"**concept:**      {label}",
+        f"**taxonomy:**     {taxonomy.get(cid, 'unknown')}",
+        f"**source_url:**   {source_url}",
+        f"**source_hash:**  {source_hash}",
+        f"**provenance:**   GuardrailDecisionV1 · v1",
+        f"",
+    ]
+    if note:
+        lines += [f"⚠ {note}", ""]
+    else:
+        lines += [
+            "**Verification:**",
+            f"```bash",
+            f"curl -s '{source_url}' | sha256sum",
+            f"# expected: {source_hash.removeprefix('sha256:')}",
+            f"```",
+            "",
+            "**source_hash** is the trust anchor. **source_url** is a fetch hint — page can change silently.",
+        ]
     return "\n".join(lines)
 
 

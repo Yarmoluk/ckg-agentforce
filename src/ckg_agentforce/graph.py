@@ -42,7 +42,7 @@ def load_graph(domain: str):
     if not csv_path.exists():
         raise ValueError(f"Domain '{domain}' not found. Run list_domains() to see all 20.")
 
-    id_to_label, label_to_id, prerequisites, dependents, taxonomy = {}, {}, defaultdict(list), defaultdict(list), {}
+    id_to_label, label_to_id, prerequisites, dependents, taxonomy, provenance = {}, {}, defaultdict(list), defaultdict(list), {}, {}
     with open(csv_path) as f:
         for row in csv.DictReader(f):
             cid = row["ConceptID"]
@@ -53,10 +53,14 @@ def load_graph(domain: str):
             label_to_id[label.lower()] = cid
             taxonomy[cid] = row.get("TaxonomyID", "").strip()
             prerequisites[cid] = deps
+            provenance[cid] = {
+                "source_url": row.get("SourceURL", ""),
+                "source_hash": row.get("source_content_hash", ""),
+            }
             for dep_id, etype, confidence in deps:
                 dependents[dep_id].append((cid, etype, confidence))
 
-    return id_to_label, label_to_id, prerequisites, dependents, taxonomy
+    return id_to_label, label_to_id, prerequisites, dependents, taxonomy, provenance
 
 
 def find_concept(label_to_id: dict, query: str) -> str | None:
