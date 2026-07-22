@@ -299,6 +299,17 @@ paper: github.com/Yarmoluk/ckg-benchmark/blob/main/paper/main.pdf
 
 ---
 
+## Want this for your domain?
+
+Graphify.md builds CKGs for enterprise domains — AgentForce, NVIDIA, finance, healthcare, and custom stacks. If you need a knowledge graph for your platform, product, or internal knowledge base:
+
+- **Try the hosted endpoint:** [ckg-agentforce.onrender.com](https://ckg-agentforce.onrender.com) — 50 free calls/day, then [$29/mo](https://buy.stripe.com/00wbJ1gsYcm01tC52A1kA08)
+- **Enterprise / custom domains:** [graphifymd.com](https://graphifymd.com) or email daniel.yarmoluk@gmail.com
+- **Benchmark paper:** [F1 0.471 · 11× fewer tokens than RAG](https://github.com/Yarmoluk/ckg-benchmark/blob/main/paper/main.pdf)
+- **97 domains available:** [graphifymd.com/pro](https://graphifymd.com/pro/)
+
+---
+
 Built by [Graphify.md](https://graphifymd.com) · 97 domains · [PyPI](https://pypi.org/project/ckg-agentforce/) · patent pending
 
 Community-built. Not affiliated with, endorsed by, or sponsored by Salesforce, Inc. AgentForce and Einstein are trademarks of Salesforce, Inc. All referenced trademarks belong to their respective owners.
