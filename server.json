@@ -6,12 +6,12 @@
     "url": "https://github.com/Yarmoluk/ckg-agentforce",
     "source": "github"
   },
-  "version": "0.2.5",
+  "version": "0.2.6",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "ckg-agentforce",
-      "version": "0.2.5",
+      "version": "0.2.6",
       "transport": {
         "type": "stdio"
       },
