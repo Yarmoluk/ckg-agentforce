@@ -68,8 +68,8 @@ Every node carries a `source_url` and a `source_hash` (SHA-256 of the source doc
 
 ```bash
 # Verify any node's source hasn't changed since extraction
-curl -s https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-overview.html | sha256sum
-# compare to the source_hash in the graph
+curl -s https://help.salesforce.com/s/articleView?id=sf.einstein_ai_trust_layer.htm | sha256sum
+# expected: cc11eedeee761e083a591cd20bbbdf46d2942906519dc5f8e51e617857118cda
 ```
 
 The full audit chain:
@@ -84,10 +84,12 @@ A hash mismatch means either the source changed (stale edge → re-extract) or t
 
 Via MCP — `verify_source("Einstein Trust Layer")`:
 ```
-source_url:  https://developer.salesforce.com/docs/einstein/genai/guide/agentforce-trust.html
-source_hash: sha256:pending
+source_url:  https://help.salesforce.com/s/articleView?id=sf.einstein_ai_trust_layer.htm
+source_hash: sha256:cc11eedeee761e083a591cd20bbbdf46d2942906519dc5f8e51e617857118cda
 verify:      curl -s '<url>' | sha256sum
 ```
+
+Reference implementation of `knowledge_source_ref` + `source_content_hash` from [GuardrailDecisionV1](https://github.com/Yarmoluk/ckg-nvidia-ai/blob/main/docs/guardrail-decision-v1.md).
 
 ---
 
