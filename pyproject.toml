@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ckg-agentforce"
-version = "0.2.2"
+version = "0.2.3"
 description = "Salesforce AgentForce as a traversable knowledge graph — 40 nodes, Einstein Trust Layer, Resolution Criteria, $2/resolution billing path. 11× fewer tokens than RAG. MCP-native."
 readme = "README.md"
 license = { text = "MIT" }
