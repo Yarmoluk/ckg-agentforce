@@ -9,6 +9,7 @@ from collections import defaultdict
 from .server import mcp
 
 _STRIPE_LINK = "https://buy.stripe.com/00wbJ1gsYcm01tC52A1kA08"
+_CAL_LINK = "https://cal.com/daniel-yarmoluk-sjmnub/30min"
 _FREE_LIMIT = 50  # calls per IP per 24h before 402
 
 _call_counts: dict = defaultdict(lambda: {"count": 0, "reset": time.time() + 86400})
@@ -64,7 +65,11 @@ uvx ckg-agentforce</pre>
 
   <h2>Subscribe — $29/mo</h2>
   <p>Unlimited remote calls. API key delivered instantly.</p>
-  <a href="https://buy.stripe.com/00wbJ1gsYcm01tC52A1kA08" style="display:inline-block;background:#0f6e56;color:white;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:600;margin-bottom:24px;">Subscribe $29/mo →</a>
+  <a href="https://buy.stripe.com/00wbJ1gsYcm01tC52A1kA08" style="display:inline-block;background:#0f6e56;color:white;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:600;margin-bottom:12px;">Subscribe $29/mo →</a>
+
+  <h2>Enterprise</h2>
+  <p>Custom domains, higher limits, private deployment. Book a 30-min call.</p>
+  <a href="https://cal.com/daniel-yarmoluk-sjmnub/30min" style="display:inline-block;background:#1a1a1a;color:white;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:600;margin-bottom:24px;">Book a call →</a>
 
   <p>
     <a href="https://graphifymd.com/pro/">graphifymd.com/pro</a> ·
@@ -115,8 +120,10 @@ def main():
                 if not _check_rate_limit(ip):
                     return JSONResponse(
                         {
-                            "error": "Free tier limit reached (50 calls/day). Subscribe for unlimited access.",
-                            "subscribe": _STRIPE_LINK,
+                            "error": "Free tier limit reached (50 calls/day).",
+                            "subscribe_29_mo": _STRIPE_LINK,
+                            "enterprise": _CAL_LINK,
+                            "message": "Self-serve: $29/mo unlimited. Enterprise teams: book a 30-min call.",
                         },
                         status_code=402,
                     )
