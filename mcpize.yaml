@@ -4,4 +4,6 @@ build:
   install: pip install -r requirements.txt
 startCommand:
   type: stdio
-  command: ckg-agentforce
+  command: uvx
+  args:
+    - ckg-agentforce
