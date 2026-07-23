@@ -21,79 +21,79 @@ _landing_html = """<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ckg-agentforce — Salesforce AgentForce Knowledge Graph</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 680px; margin: 60px auto; padding: 0 24px; color: #1a1a1a; }
-    h1 { font-size: 1.6rem; margin-bottom: 4px; }
-    .sub { color: #555; margin-bottom: 32px; }
-    .stat { display: inline-block; background: #f0f4f8; border-radius: 6px; padding: 10px 18px; margin: 4px 4px 4px 0; }
-    .stat strong { display: block; font-size: 1.3rem; }
-    .stat span { font-size: 0.82rem; color: #666; }
-    code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; font-size: 0.92em; }
-    pre { background: #f4f4f4; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 0.88em; }
-    a { color: #0f6e56; }
-    .badge { display: inline-block; background: #0f6e56; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 600; }
-    .token-math { background: #f4f4f4; border-left: 3px solid #0f6e56; padding: 14px 18px; border-radius: 0 6px 6px 0; margin: 16px 0; font-family: monospace; font-size: 0.9em; line-height: 1.7; }
-    .audit-block { background: #f8fffe; border: 1px solid #0f6e56; border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
-    .audit-block ul { margin: 8px 0 0 0; padding-left: 20px; }
-    .audit-block li { margin-bottom: 4px; font-size: 0.92em; }
-    .conformance { display: inline-block; background: #e6f4ef; color: #0f6e56; font-weight: 700; padding: 2px 10px; border-radius: 4px; font-size: 0.85em; }
+    body { font-family: system-ui, sans-serif; max-width: 580px; margin: 48px auto; padding: 0 20px; color: #1a1a1a; line-height: 1.5; }
+    h1 { font-size: 1.4rem; margin: 0 0 2px; }
+    .sub { color: #666; font-size: 0.9em; margin: 0 0 20px; }
+    .stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .stat { background: #f0f4f8; border-radius: 6px; padding: 8px 14px; text-align: center; }
+    .stat strong { display: block; font-size: 1.2rem; }
+    .stat span { font-size: 0.75rem; color: #666; }
+    .math { font-family: monospace; font-size: 0.85em; border-left: 3px solid #0f6e56; padding: 8px 14px; background: #f4f4f4; margin: 12px 0 20px; line-height: 1.8; }
+    .audit { border: 1px solid #c8e6de; background: #f8fffe; border-radius: 6px; padding: 12px 16px; margin: 12px 0 20px; font-size: 0.88em; }
+    .audit p { margin: 0 0 6px; }
+    .audit ul { margin: 0; padding-left: 18px; }
+    .audit li { margin-bottom: 2px; }
+    .conf { background: #e6f4ef; color: #0f6e56; font-weight: 700; padding: 1px 8px; border-radius: 3px; font-size: 0.82em; }
+    code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 0.88em; }
+    pre { background: #f4f4f4; padding: 12px; border-radius: 6px; font-size: 0.85em; overflow-x: auto; }
+    .tools { font-size: 0.9em; padding-left: 18px; margin: 8px 0 16px; }
+    .tools li { margin-bottom: 3px; }
+    .btns { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 20px; }
+    .btn-green { background: #0f6e56; color: white; padding: 10px 22px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.92em; }
+    .btn-dark { background: #1a1a1a; color: white; padding: 10px 22px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.92em; }
+    .footer { font-size: 0.82em; color: #888; margin-top: 8px; }
+    .footer a { color: #0f6e56; }
+    .badge { background: #0f6e56; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 600; }
+    h2 { font-size: 0.95rem; margin: 20px 0 6px; text-transform: uppercase; letter-spacing: 0.04em; color: #444; }
   </style>
 </head>
 <body>
-  <h1>ckg-agentforce</h1>
-  <p class="sub">Compressed Knowledge Graph · Salesforce AgentForce · <span class="badge">v0.2.6</span></p>
+  <h1>ckg-agentforce <span class="badge">v0.2.6</span></h1>
+  <p class="sub">Salesforce AgentForce · Compressed Knowledge Graph · MCP-native</p>
 
-  <div>
+  <div class="stats">
     <div class="stat"><strong>40</strong><span>nodes</span></div>
     <div class="stat"><strong>0.471</strong><span>F1 vs RAG 0.123</span></div>
-    <div class="stat"><strong>11×</strong><span>fewer tokens than RAG</span></div>
+    <div class="stat"><strong>11×</strong><span>fewer tokens</span></div>
     <div class="stat"><strong>269</strong><span>tokens avg</span></div>
   </div>
 
-  <div class="token-math">335 AgentForce queries<br>= 1,000,000 tokens · RAG<br>= 90,000 tokens · RAG + CKG</div>
+  <div class="math">335 AgentForce queries<br>= 1,000,000 tokens · RAG<br>= &nbsp;&nbsp;90,000 tokens · RAG + CKG</div>
 
-  <h2>What it solves</h2>
-  <p>AgentForce charges $2 per autonomous resolution. Most failures come from agents not knowing the prerequisite chain — which capabilities gate on Einstein Trust Layer, what triggers the billing event, what Grounding actually requires. This graph declares those relationships explicitly so your agent traverses declared edges instead of inferring from docs.</p>
+  <p style="font-size:0.9em;">AgentForce charges $2/autonomous resolution. Most failures come from agents not knowing the prerequisite chain. This graph declares those relationships explicitly — your agent traverses declared edges instead of inferring from docs.</p>
 
-  <h2>Auditable by design</h2>
-  <div class="audit-block">
-    <p style="margin:0 0 8px 0;">Every edge traces to a SHA-256-pinned Salesforce source document. The graph doesn't guess — it traverses. <span class="conformance">GuardrailDecisionV1 · 13/13 passed</span></p>
+  <div class="audit">
+    <p>Every edge SHA-256-pinned to a Salesforce source doc. The graph doesn't guess — it traverses. <span class="conf">GuardrailDecisionV1 · 13/13</span></p>
     <ul>
       <li><code>source_content_hash</code> computed at extraction time, before any query outcome</li>
-      <li>Recomputable: <code>curl -s &lt;source_url&gt; | sha256sum</code></li>
-      <li><code>verify_source(concept)</code> fails closed on hash mismatch</li>
-      <li><code>TEMPORAL_PRECEDENCE_UNPROVEN</code> returned when no external anchor present</li>
+      <li>Recomputable: <code>curl -s &lt;url&gt; | sha256sum</code></li>
+      <li><code>verify_source()</code> fails closed on mismatch</li>
     </ul>
-    <p style="margin:8px 0 0 0; font-size:0.85em; color:#555;">CKG listed as prior art in <a href="https://github.com/crewAIInc/crewAI/issues/4877">crewAI GuardrailProvider spec #4877</a>.</p>
+    <p style="margin:6px 0 0;color:#666;">Prior art: <a href="https://github.com/crewAIInc/crewAI/issues/4877">crewAI GuardrailProvider spec #4877</a></p>
   </div>
 
-  <h2>MCP endpoint</h2>
+  <h2>Endpoint</h2>
   <pre>POST https://ckg-agentforce.onrender.com/mcp</pre>
 
   <h2>Tools</h2>
-  <ul>
-    <li><code>list_concepts()</code> — all 40 AgentForce concepts</li>
-    <li><code>search_concepts(query)</code> — keyword search</li>
+  <ul class="tools">
     <li><code>query_ckg(concept, depth)</code> — subgraph traversal</li>
     <li><code>get_prerequisites(concept)</code> — full upstream chain</li>
     <li><code>resolution_path()</code> — the $2/resolution billing chain</li>
+    <li><code>search_concepts(query)</code> · <code>list_concepts()</code></li>
   </ul>
 
-  <p>Free tier: 50 calls/day per IP. Subscribe for unlimited access.</p>
-
   <h2>Quick start</h2>
-  <pre>pip install ckg-agentforce
-# or via uvx:
-uvx ckg-agentforce</pre>
+  <pre>pip install ckg-agentforce   # or: uvx ckg-agentforce</pre>
 
-  <h2>Subscribe — $29/mo</h2>
-  <p>Unlimited remote calls. API key delivered instantly.</p>
-  <a href="https://buy.stripe.com/00wbJ1gsYcm01tC52A1kA08" style="display:inline-block;background:#0f6e56;color:white;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:600;margin-bottom:12px;">Subscribe $29/mo →</a>
+  <p style="font-size:0.85em;color:#666;">Free tier: 50 calls/day per IP.</p>
 
-  <h2>Enterprise</h2>
-  <p>Custom domains, higher limits, private deployment. Book a 30-min call.</p>
-  <a href="https://cal.com/daniel-yarmoluk-sjmnub/30min" style="display:inline-block;background:#1a1a1a;color:white;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:600;margin-bottom:24px;">Book a call →</a>
+  <div class="btns">
+    <a class="btn-green" href="https://buy.stripe.com/00wbJ1gsYcm01tC52A1kA08">Subscribe $29/mo →</a>
+    <a class="btn-dark" href="https://cal.com/daniel-yarmoluk-sjmnub/30min">Book a call →</a>
+  </div>
 
-  <p style="font-size:0.88em;">
+  <p class="footer">
     <a href="https://graphifymd.com/pro/">graphifymd.com/pro</a> ·
     <a href="https://github.com/Yarmoluk/ckg-agentforce">GitHub</a> ·
     <a href="https://github.com/Yarmoluk/ckg-benchmark/blob/main/paper/main.pdf">Benchmark paper</a>
