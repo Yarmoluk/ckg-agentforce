@@ -10,9 +10,12 @@ from .server import mcp
 
 _STRIPE_LINK = "https://buy.stripe.com/00wbJ1gsYcm01tC52A1kA08"
 _CAL_LINK = "https://cal.com/daniel-yarmoluk-sjmnub/30min"
-_FREE_LIMIT = 50  # calls per IP per 24h before 402
+_TALLY_LINK = "https://tally.so/r/ckg-trial"  # replace with real Tally form ID
+_FREE_LIMIT = 5    # anonymous calls per IP per 24h
+_TRIAL_LIMIT = 100  # trial key total calls (in-memory)
 
 _call_counts: dict = defaultdict(lambda: {"count": 0, "reset": time.time() + 86400})
+_trial_usage: dict = defaultdict(int)  # license_key -> total calls used
 
 _landing_html = """<!DOCTYPE html>
 <html lang="en">
@@ -86,9 +89,10 @@ _landing_html = """<!DOCTYPE html>
   <h2>Quick start</h2>
   <pre>pip install ckg-agentforce   # or: uvx ckg-agentforce</pre>
 
-  <p style="font-size:0.85em;color:#666;">Free tier: 50 calls/day per IP.</p>
+  <p style="font-size:0.85em;color:#666;">Free: 5 anonymous calls/day · Trial: 100 calls with your email · Dev: $29/mo unlimited.</p>
 
   <div class="btns">
+    <a class="btn-green" href="https://tally.so/r/ckg-trial">Get 100 free calls →</a>
     <a class="btn-green" href="https://buy.stripe.com/00wbJ1gsYcm01tC52A1kA08">Subscribe $29/mo →</a>
     <a class="btn-dark" href="https://cal.com/daniel-yarmoluk-sjmnub/30min">Book a call →</a>
   </div>
@@ -138,17 +142,33 @@ def main():
     class RateLimitMiddleware(BaseHTTPMiddleware):
         async def dispatch(self, request: Request, call_next):
             if request.url.path.startswith("/mcp"):
-                ip = _get_ip(request)
-                if not _check_rate_limit(ip):
-                    return JSONResponse(
-                        {
-                            "error": "Free tier limit reached (50 calls/day).",
-                            "subscribe_29_mo": _STRIPE_LINK,
-                            "enterprise": _CAL_LINK,
-                            "message": "Self-serve: $29/mo unlimited. Enterprise teams: book a 30-min call.",
-                        },
-                        status_code=402,
-                    )
+                license_key = request.headers.get("X-License-Key", "").strip()
+                if license_key:
+                    used = _trial_usage[license_key]
+                    if used >= _TRIAL_LIMIT:
+                        return JSONResponse(
+                            {
+                                "error": f"Trial limit reached ({_TRIAL_LIMIT} calls).",
+                                "subscribe_29_mo": _STRIPE_LINK,
+                                "enterprise": _CAL_LINK,
+                                "message": "Upgrade to Dev $29/mo for unlimited calls.",
+                            },
+                            status_code=402,
+                        )
+                    _trial_usage[license_key] += 1
+                else:
+                    ip = _get_ip(request)
+                    if not _check_rate_limit(ip):
+                        return JSONResponse(
+                            {
+                                "error": f"Free tier limit reached ({_FREE_LIMIT} calls/day).",
+                                "get_trial_key": _TALLY_LINK,
+                                "trial_message": "Get 100 free calls — enter your email for a trial key.",
+                                "subscribe_29_mo": _STRIPE_LINK,
+                                "enterprise": _CAL_LINK,
+                            },
+                            status_code=402,
+                        )
             return await call_next(request)
 
     async def homepage(request: Request):
@@ -167,6 +187,12 @@ def main():
             "resources": ["agentforce://nodes", "agentforce://resolution-chain"],
             "publisher": "Graphify.md",
             "publisher_url": "https://graphifymd.com",
+            "tiers": {
+                "free": "5 calls/day (no key required)",
+                "trial": f"100 calls total — get key at {_TALLY_LINK}",
+                "dev": "$29/mo unlimited — X-License-Key header",
+                "enterprise": _CAL_LINK,
+            },
         })
 
     mcp_app = mcp.streamable_http_app()
