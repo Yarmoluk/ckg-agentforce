@@ -28,9 +28,14 @@ _landing_html = """<!DOCTYPE html>
     .stat strong { display: block; font-size: 1.3rem; }
     .stat span { font-size: 0.82rem; color: #666; }
     code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; font-size: 0.92em; }
-    pre { background: #f4f4f4; padding: 16px; border-radius: 8px; overflow-x: auto; }
+    pre { background: #f4f4f4; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 0.88em; }
     a { color: #0f6e56; }
     .badge { display: inline-block; background: #0f6e56; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 600; }
+    .token-math { background: #f4f4f4; border-left: 3px solid #0f6e56; padding: 14px 18px; border-radius: 0 6px 6px 0; margin: 16px 0; font-family: monospace; font-size: 0.9em; line-height: 1.7; }
+    .audit-block { background: #f8fffe; border: 1px solid #0f6e56; border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+    .audit-block ul { margin: 8px 0 0 0; padding-left: 20px; }
+    .audit-block li { margin-bottom: 4px; font-size: 0.92em; }
+    .conformance { display: inline-block; background: #e6f4ef; color: #0f6e56; font-weight: 700; padding: 2px 10px; border-radius: 4px; font-size: 0.85em; }
   </style>
 </head>
 <body>
@@ -39,9 +44,26 @@ _landing_html = """<!DOCTYPE html>
 
   <div>
     <div class="stat"><strong>40</strong><span>nodes</span></div>
-    <div class="stat"><strong>269</strong><span>tokens avg</span></div>
+    <div class="stat"><strong>0.471</strong><span>F1 vs RAG 0.123</span></div>
     <div class="stat"><strong>11×</strong><span>fewer tokens than RAG</span></div>
-    <div class="stat"><strong>$2</strong><span>per resolution</span></div>
+    <div class="stat"><strong>269</strong><span>tokens avg</span></div>
+  </div>
+
+  <div class="token-math">335 AgentForce queries<br>= 1,000,000 tokens · RAG<br>= 90,000 tokens · RAG + CKG</div>
+
+  <h2>What it solves</h2>
+  <p>AgentForce charges $2 per autonomous resolution. Most failures come from agents not knowing the prerequisite chain — which capabilities gate on Einstein Trust Layer, what triggers the billing event, what Grounding actually requires. This graph declares those relationships explicitly so your agent traverses declared edges instead of inferring from docs.</p>
+
+  <h2>Auditable by design</h2>
+  <div class="audit-block">
+    <p style="margin:0 0 8px 0;">Every edge traces to a SHA-256-pinned Salesforce source document. The graph doesn't guess — it traverses. <span class="conformance">GuardrailDecisionV1 · 13/13 passed</span></p>
+    <ul>
+      <li><code>source_content_hash</code> computed at extraction time, before any query outcome</li>
+      <li>Recomputable: <code>curl -s &lt;source_url&gt; | sha256sum</code></li>
+      <li><code>verify_source(concept)</code> fails closed on hash mismatch</li>
+      <li><code>TEMPORAL_PRECEDENCE_UNPROVEN</code> returned when no external anchor present</li>
+    </ul>
+    <p style="margin:8px 0 0 0; font-size:0.85em; color:#555;">CKG listed as prior art in <a href="https://github.com/crewAIInc/crewAI/issues/4877">crewAI GuardrailProvider spec #4877</a>.</p>
   </div>
 
   <h2>MCP endpoint</h2>
@@ -71,7 +93,7 @@ uvx ckg-agentforce</pre>
   <p>Custom domains, higher limits, private deployment. Book a 30-min call.</p>
   <a href="https://cal.com/daniel-yarmoluk-sjmnub/30min" style="display:inline-block;background:#1a1a1a;color:white;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:600;margin-bottom:24px;">Book a call →</a>
 
-  <p>
+  <p style="font-size:0.88em;">
     <a href="https://graphifymd.com/pro/">graphifymd.com/pro</a> ·
     <a href="https://github.com/Yarmoluk/ckg-agentforce">GitHub</a> ·
     <a href="https://github.com/Yarmoluk/ckg-benchmark/blob/main/paper/main.pdf">Benchmark paper</a>
