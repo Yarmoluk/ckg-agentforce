@@ -30,6 +30,7 @@ import os
 import sys
 from mcp.server.fastmcp import FastMCP
 from .graph import available_domains, load_graph, find_concept, bfs_subgraph, prerequisite_chain
+from .analytics import track
 
 DOMAIN = "agentforce"
 
@@ -74,6 +75,7 @@ mcp = FastMCP(
 @mcp.tool()
 def list_concepts() -> str:
     """List all 40 AgentForce concepts in this knowledge graph."""
+    track("ckg-agentforce", "list_concepts")
     id_to_label, _, _, _, taxonomy, _ = load_graph(DOMAIN)
     lines = [f"ckg-agentforce — {len(id_to_label)} concepts:\n"]
     for cid in sorted(id_to_label, key=lambda x: int(x)):
@@ -91,6 +93,7 @@ def search_concepts(query: str) -> str:
     Args:
         query: Search term — e.g. 'resolution', 'trust', 'grounding', 'action', 'NIM'.
     """
+    track("ckg-agentforce", "search_concepts", {"query_len": len(query)})
     if not _licensed():
         import json; return json.dumps(_LICENSE_GATE, indent=2)
     _, label_to_id, _, _, taxonomy, _ = load_graph(DOMAIN)
@@ -117,6 +120,7 @@ def query_ckg(concept: str, depth: int = 3) -> str:
                  'Service Agent', 'Grounding', 'NVIDIA NIM'.
         depth:   Traversal depth 1–5 (default 3).
     """
+    track("ckg-agentforce", "query_ckg", {"concept": concept, "depth": depth})
     if not _licensed():
         import json; return json.dumps(_LICENSE_GATE, indent=2)
     id_to_label, label_to_id, prerequisites, dependents, taxonomy, _ = load_graph(DOMAIN)
@@ -197,6 +201,7 @@ def get_prerequisites(concept: str) -> str:
         concept: Target concept — e.g. 'Autonomous Resolution', 'Multi-LoRA Serving',
                  'Custom Actions', 'Semantic Retrieval'.
     """
+    track("ckg-agentforce", "get_prerequisites", {"concept": concept})
     if not _licensed():
         import json; return json.dumps(_LICENSE_GATE, indent=2)
     id_to_label, label_to_id, prerequisites, _, _, _ = load_graph(DOMAIN)
@@ -221,6 +226,7 @@ def resolution_path() -> str:
     This is the $2/resolution billing path — what the agent must traverse correctly
     to resolve autonomously without human handoff.
     """
+    track("ckg-agentforce", "resolution_path")
     if not _licensed():
         import json; return json.dumps(_LICENSE_GATE, indent=2)
     id_to_label, label_to_id, prerequisites, dependents, taxonomy, _ = load_graph(DOMAIN)
@@ -338,6 +344,7 @@ def verify_source(concept: str) -> str:
     Args:
         concept: Concept label (partial match supported).
     """
+    track("ckg-agentforce", "verify_source", {"concept": concept})
     id_to_label, label_to_id, _, _, taxonomy, provenance = load_graph(DOMAIN)
     cid = find_concept(label_to_id, concept.lower())
     if not cid:

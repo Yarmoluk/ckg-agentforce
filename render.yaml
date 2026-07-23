@@ -8,3 +8,7 @@ services:
     envVars:
       - key: PORT
         generateValue: true
+      - key: POSTHOG_KEY
+        sync: false
+      - key: RESEND_KEY
+        sync: false

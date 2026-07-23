@@ -3,10 +3,13 @@ HTTP server for ckg-agentforce — Streamable HTTP transport (Render/Smithery-co
 """
 from __future__ import annotations
 
+import os
 import time
+import uuid
 from collections import defaultdict
 
 from .server import mcp
+from .analytics import track
 
 _STRIPE_LINK = "https://buy.stripe.com/00wbJ1gsYcm01tC52A1kA08"
 _CAL_LINK = "https://cal.com/daniel-yarmoluk-sjmnub/30min"
@@ -123,8 +126,38 @@ def _check_rate_limit(ip: str) -> bool:
     return True
 
 
+_trial_keys: dict = {}  # key -> {"email": str, "calls": int}
+
+
+def _send_trial_email(email: str, key: str) -> None:
+    resend_key = os.environ.get("RESEND_KEY", "")
+    if not resend_key:
+        return
+    try:
+        import httpx
+        httpx.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {resend_key}"},
+            json={
+                "from": "Graphify.md <noreply@graphifymd.com>",
+                "to": [email],
+                "subject": "Your CKG trial key",
+                "html": (
+                    f"<p>Thanks for registering!</p>"
+                    f"<p><strong>Trial key:</strong> <code>{key}</code></p>"
+                    f"<p>Add to your MCP client as the <code>X-License-Key</code> header. "
+                    f"Gives you 100 calls on the ckg-agentforce endpoint.</p>"
+                    f"<p>Endpoint: <code>https://ckg-agentforce.onrender.com/mcp</code></p>"
+                    f"<p>— Graphify.md</p>"
+                ),
+            },
+            timeout=5.0,
+        )
+    except Exception:
+        pass
+
+
 def main():
-    import os
     import sys
 
     port = int(os.environ.get("PORT", 8000))
@@ -143,22 +176,39 @@ def main():
         async def dispatch(self, request: Request, call_next):
             if request.url.path.startswith("/mcp"):
                 license_key = request.headers.get("X-License-Key", "").strip()
+                ip = _get_ip(request)
                 if license_key:
-                    used = _trial_usage[license_key]
-                    if used >= _TRIAL_LIMIT:
-                        return JSONResponse(
-                            {
-                                "error": f"Trial limit reached ({_TRIAL_LIMIT} calls).",
-                                "subscribe_29_mo": _STRIPE_LINK,
-                                "enterprise": _CAL_LINK,
-                                "message": "Upgrade to Dev $29/mo for unlimited calls.",
-                            },
-                            status_code=402,
-                        )
-                    _trial_usage[license_key] += 1
+                    entry = _trial_keys.get(license_key)
+                    if entry is None:
+                        # Fall back to legacy in-memory counter for keys issued before restart
+                        used = _trial_usage[license_key]
+                        if used >= _TRIAL_LIMIT:
+                            return JSONResponse(
+                                {
+                                    "error": f"Trial limit reached ({_TRIAL_LIMIT} calls).",
+                                    "subscribe_29_mo": _STRIPE_LINK,
+                                    "enterprise": _CAL_LINK,
+                                    "message": "Upgrade to Dev $29/mo for unlimited calls.",
+                                },
+                                status_code=402,
+                            )
+                        _trial_usage[license_key] += 1
+                    else:
+                        if entry["calls"] >= _TRIAL_LIMIT:
+                            return JSONResponse(
+                                {
+                                    "error": f"Trial limit reached ({_TRIAL_LIMIT} calls).",
+                                    "subscribe_29_mo": _STRIPE_LINK,
+                                    "enterprise": _CAL_LINK,
+                                    "message": "Upgrade to Dev $29/mo for unlimited calls.",
+                                },
+                                status_code=402,
+                            )
+                        entry["calls"] += 1
+                    track("ckg-agentforce", "mcp_request", {"key_type": "trial", "_ip": ip})
                 else:
-                    ip = _get_ip(request)
                     if not _check_rate_limit(ip):
+                        track("ckg-agentforce", "rate_limit_hit", {"_ip": ip})
                         return JSONResponse(
                             {
                                 "error": f"Free tier limit reached ({_FREE_LIMIT} calls/day).",
@@ -169,6 +219,7 @@ def main():
                             },
                             status_code=402,
                         )
+                    track("ckg-agentforce", "mcp_request", {"key_type": "free", "_ip": ip})
             return await call_next(request)
 
     async def homepage(request: Request):
@@ -195,11 +246,48 @@ def main():
             },
         })
 
+    async def register(request: Request):
+        """Email registration endpoint — Tally webhook or direct POST/GET."""
+        email = ""
+        if request.method == "POST":
+            try:
+                body = await request.json()
+                # Tally webhook format: body.data.fields[].value where label=="Email"
+                if "data" in body and "fields" in body["data"]:
+                    for field in body["data"]["fields"]:
+                        if "email" in (field.get("label") or "").lower() or field.get("type") == "INPUT_EMAIL":
+                            email = field.get("value", "")
+                            break
+                else:
+                    email = body.get("email", "")
+            except Exception:
+                email = request.query_params.get("email", "")
+        else:
+            email = request.query_params.get("email", "")
+
+        if not email or "@" not in email:
+            return JSONResponse({"error": "valid email required"}, status_code=400)
+
+        key = uuid.uuid4().hex[:24]
+        _trial_keys[key] = {"email": email, "calls": 0}
+        track("ckg-agentforce", "trial_register", {"email": email})
+        import threading
+        threading.Thread(target=_send_trial_email, args=(email, key), daemon=True).start()
+        return JSONResponse({
+            "key": key,
+            "email": email,
+            "limit": _TRIAL_LIMIT,
+            "header": "X-License-Key",
+            "endpoint": "https://ckg-agentforce.onrender.com/mcp",
+            "message": f"Trial key issued. Check your email for instructions. Limit: {_TRIAL_LIMIT} calls.",
+        })
+
     mcp_app = mcp.streamable_http_app()
 
     app = Starlette(routes=[
         Route("/", homepage),
         Route("/.well-known/mcp/server-card.json", server_card),
+        Route("/register", register, methods=["GET", "POST"]),
         Mount("/mcp", app=mcp_app),
     ])
     app.add_middleware(RateLimitMiddleware)
